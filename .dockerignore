@@ -1,6 +1,0 @@
-src
-test
-.yarn
-node_modules
-**/*.js.map
-**/*.spec.*
