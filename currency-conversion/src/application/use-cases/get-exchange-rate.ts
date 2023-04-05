@@ -1,13 +1,21 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import axios from 'axios';
+import { CurrencyConversionBody } from 'src/infra/http/dtos/currency-conversion';
+import { SqsProducerService } from 'src/infra/messaging/sqs/sqs-producer.service';
 
 @Injectable()
 export class GetExchangeRate {
+  constructor(private readonly sqsProducerService: SqsProducerService) {}
   private readonly apiURL = 'https://openexchangerates.org/api/latest.json';
   private readonly apiKey = process.env.API_KEY;
 
-  async execute(amount: number, fromCurrency: string, toCurrency: string) {
-    if (!amount || !fromCurrency || !toCurrency) {
+  async execute({
+    user,
+    amount,
+    fromCurrency,
+    toCurrency,
+  }: CurrencyConversionBody) {
+    if (!user || !amount || !fromCurrency || !toCurrency) {
       throw new HttpException(
         {
           status: HttpStatus.BAD_REQUEST,
@@ -39,7 +47,15 @@ export class GetExchangeRate {
           HttpStatus.NOT_FOUND,
         );
       }
-      const convertedAmount = amount * exchangeRate;
+      const convertedAmount = parseFloat(amount) * exchangeRate;
+      const message = {
+        user,
+        amount,
+        fromCurrency,
+        toCurrency,
+        convertedAmount,
+      };
+      await this.sqsProducerService.sendMessage(JSON.stringify(message));
       return convertedAmount;
     } catch (err) {
       if (err.response && err.response.data) {
