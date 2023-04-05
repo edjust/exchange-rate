@@ -12,6 +12,9 @@ export class SqsProducerService {
   async enqueue(
     messageBody: CurrencyConversionBody,
   ): Promise<SQS.SendMessageResult | Error> {
+    if (!this.queueUrl) {
+      throw new Error('SQS Queue URL not specified');
+    }
     const params = {
       MessageBody: JSON.stringify(messageBody),
       QueueUrl: this.queueUrl,
