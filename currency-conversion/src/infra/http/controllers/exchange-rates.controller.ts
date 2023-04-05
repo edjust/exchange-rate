@@ -1,27 +1,23 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Controller, Post, Body } from '@nestjs/common';
 import { GetExchangeRate } from '../../../application/use-cases/get-exchange-rate';
-import { SqsProducerService } from 'src/infra/messaging/sqs/sqs-producer.service';
+import { CurrencyConversionBody } from '../dtos/currency-conversion';
 
 @Controller('exchange')
 export class ExchangeRateController {
-  constructor(
-    private readonly getExchangeRate: GetExchangeRate,
-    private readonly sqsProducerService: SqsProducerService,
-  ) {}
+  constructor(private readonly getExchangeRate: GetExchangeRate) {}
 
-  @Get('convert/:amount/:fromCurrency/:toCurrency')
+  @Post('convert')
   async convertCurrency(
-    @Param('amount') amount: number,
-    @Param('fromCurrency') fromCurrency: string,
-    @Param('toCurrency') toCurrency: string,
+    @Body() currencyConversionBody: CurrencyConversionBody,
   ) {
-    const convertedAmount = await this.getExchangeRate.execute(
+    const { user, amount, fromCurrency, toCurrency } = currencyConversionBody;
+    const convertedAmount = await this.getExchangeRate.execute({
+      user,
       amount,
       fromCurrency,
       toCurrency,
-    );
-    const message = { amount, fromCurrency, toCurrency, convertedAmount };
-    await this.sqsProducerService.sendMessage(JSON.stringify(message));
+    });
+    const message = { user, amount, fromCurrency, toCurrency, convertedAmount };
     return message;
   }
 }
