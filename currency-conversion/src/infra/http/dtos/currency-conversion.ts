@@ -6,4 +6,5 @@ export interface CurrencyConversionBody {
     name: string;
     email: string;
   };
+  convertedAmount?: string;
 }

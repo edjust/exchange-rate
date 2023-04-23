@@ -18,6 +18,6 @@ export class ExchangeRateController {
       toCurrency,
     });
     const message = { user, amount, fromCurrency, toCurrency, convertedAmount };
-    return message;
+    return JSON.stringify(message);
   }
 }
