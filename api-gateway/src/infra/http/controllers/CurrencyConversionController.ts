@@ -6,10 +6,10 @@ export class CurrencyConversionController {
     const { user, amount, fromCurrency, toCurrency } =
       request.body as CurrencyConversionBody;
     const params = {
+      user,
       amount,
       fromCurrency,
       toCurrency,
-      user,
     };
     const sqsProducerService = new SqsProducerService();
     const result = await sqsProducerService.enqueue(params);
