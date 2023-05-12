@@ -15,7 +15,6 @@ export class RedisCacheRepository implements CacheRepository {
   }
 
   async save(key: string, value: any): Promise<void> {
-    console.log('SAVE');
     await this.client.set(key, JSON.stringify(value), 'EX', 60);
   }
 
@@ -25,7 +24,6 @@ export class RedisCacheRepository implements CacheRepository {
     if (!data) {
       return null;
     }
-    console.log('RECOVER');
     const parsedData = JSON.parse(data) as T;
     return parsedData;
   }
