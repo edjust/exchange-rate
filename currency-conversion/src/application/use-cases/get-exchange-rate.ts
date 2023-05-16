@@ -1,15 +1,11 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import axios from 'axios';
-// import { SqsProducerService } from 'src/infra/messaging/sqs/sqs-producer.service';
 import { CurrencyConversionBody } from 'src/infra/http/dtos/currency-conversion';
 import { CacheRepository } from 'src/infra/repositories/cache-repository';
 
 @Injectable()
 export class GetExchangeRate {
-  constructor(
-    // private readonly sqsProducerService: SqsProducerService,
-    private readonly cacheRepository: CacheRepository,
-  ) {}
+  constructor(private readonly cacheRepository: CacheRepository) {}
   private readonly apiURL = 'https://openexchangerates.org/api/latest.json';
   private readonly apiKey = process.env.API_KEY;
 
@@ -33,9 +29,6 @@ export class GetExchangeRate {
     let convertedAmount = await this.cacheRepository.recover<string>(cacheKey);
 
     if (convertedAmount) {
-      // await this.sqsProducerService.sendMessage(
-      //   JSON.stringify(convertedAmount),
-      // );
       return convertedAmount;
     } else {
       if (!this.apiKey) {
@@ -63,14 +56,6 @@ export class GetExchangeRate {
         }
         convertedAmount = (parseFloat(amount) * exchangeRate).toString();
         await this.cacheRepository.save(cacheKey, convertedAmount);
-        const message = {
-          user,
-          amount,
-          fromCurrency,
-          toCurrency,
-          convertedAmount,
-        } as CurrencyConversionBody;
-        // await this.sqsProducerService.sendMessage(JSON.stringify(message));
         return convertedAmount;
       } catch (err) {
         if (err.response && err.response.data) {
