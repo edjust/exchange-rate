@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { SQS } from 'aws-sdk';
+import { CurrencyConversionBody } from 'src/infra/http/dtos/currency-conversion';
+import { MailViewModel } from 'src/infra/http/view-models/mail-view-model';
 
 @Injectable()
 export class SqsProducerService {
@@ -10,9 +12,10 @@ export class SqsProducerService {
   });
   private readonly queueUrl = process.env.AWS_QUEUE_URL || '';
 
-  async sendMessage(messageBody: string): Promise<void> {
+  async sendMessage(messageBody: CurrencyConversionBody): Promise<void> {
+    const emailResponse = MailViewModel.toEmail(messageBody);
     const params = {
-      MessageBody: messageBody,
+      MessageBody: JSON.stringify(emailResponse),
       QueueUrl: this.queueUrl,
     };
     console.log('SQS Producer Message: ', params);
