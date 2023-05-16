@@ -1,11 +1,15 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { GetExchangeRate } from 'src/application/use-cases/get-exchange-rate';
-import { CurrencyConversionBody } from 'src/infra/http/dtos/currency-conversion';
 import { SQS } from 'aws-sdk';
+import { GetExchangeRate } from 'src/application/use-cases/get-exchange-rate';
+import { SqsProducerService } from './sqs-producer.service';
+import { CurrencyConversionBody } from 'src/infra/http/dtos/currency-conversion';
 
 @Injectable()
 export class SqsConsumerService {
-  constructor(private readonly getExchangeRate: GetExchangeRate) {}
+  constructor(
+    private readonly getExchangeRate: GetExchangeRate,
+    private readonly producerService: SqsProducerService,
+  ) {}
   private sqs = new SQS({
     region: process.env.AWS_REGION || 'us-east-1',
     accessKeyId: process.env.AWS_ACCESS_KEY_ID,
@@ -73,6 +77,16 @@ export class SqsConsumerService {
               ReceiptHandle: message.ReceiptHandle,
             })
             .promise();
+
+          const messageBody = {
+            user,
+            amount,
+            fromCurrency,
+            toCurrency,
+            convertedAmount,
+          } as CurrencyConversionBody;
+
+          await this.producerService.sendMessage(messageBody);
         }
       } catch (error) {
         console.error('SQS Error processing message:', error);
