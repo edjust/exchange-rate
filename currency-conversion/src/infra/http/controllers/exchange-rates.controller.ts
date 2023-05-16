@@ -7,17 +7,14 @@ export class ExchangeRateController {
   constructor(private readonly getExchangeRate: GetExchangeRate) {}
 
   @Post('convert')
-  async convertCurrency(
-    @Body() currencyConversionBody: CurrencyConversionBody,
-  ) {
-    const { user, amount, fromCurrency, toCurrency } = currencyConversionBody;
+  async convertCurrency(@Body() body: CurrencyConversionBody) {
+    const { user, amount, fromCurrency, toCurrency } = body;
     const convertedAmount = await this.getExchangeRate.execute({
       user,
       amount,
       fromCurrency,
       toCurrency,
     });
-    const message = { user, amount, fromCurrency, toCurrency, convertedAmount };
-    return JSON.stringify(message);
+    return { convertedAmount };
   }
 }
